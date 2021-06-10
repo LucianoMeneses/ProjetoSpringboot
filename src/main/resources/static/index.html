@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="ISO-8859-1">
+<title>Projeto em Spring-boot</title>
+
+<!-- Bootstrap CSS -->
+<link
+	href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css"
+	rel="stylesheet"
+	integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x"
+	crossorigin="anonymous">
+
+</head>
+<body>
+
+	<div
+		style="width: 35%; margin: 0 auto; margin-top: 5%; border: 2px solid #ccc; border-radius: 10px; background-color: rgb(248, 248, 255, 1);">
+		<div style="margin: 15px 15px 15px 15px ">
+			<h2 style="margin-left: 70px">Cadastro de usuários</h2>
+			<form action="" id="formCadastroUser">
+				<div class="mb-3" style="width: 10%">
+					<label for="id" class="form-label">ID</label> <input type="text"
+						class="form-control" id="id" readonly="readonly">
+				</div>
+				<div class="mb-3" style="width: 82%">
+					<label for="nome" class="form-label">Nome usuário</label> <input
+						type="text" class="form-control" id="nome"
+						placeholder="Digite o nome do usuário" required="required">
+				</div>
+				<div class="mb-3" style="width: 30%">
+					<label for="idade" class="form-label">Idade</label> <input
+						type="number" class="form-control" id="idade">
+				</div>
+			</form>
+			<button type="button" class="btn btn-primary"
+				onclick="salvarUsuario()">Adicionar</button>
+			<button type="button" class="btn btn-secondary"
+				onclick="limparCampos()">Novo</button>
+			<button type="button" class="btn btn-danger" data-bs-toggle="modal"
+				data-bs-target="#exampleModal">Pesquisar</button>
+
+		</div>
+
+		<div class="modal fade" id="exampleModal" tabindex="-1"
+			aria-labelledby="exampleModalLabel" aria-hidden="true" style="height: 95%">
+			<div class="modal-dialog">
+				<div class="modal-content">
+					<div class="modal-header">
+						<h5 class="modal-title" id="exampleModalLabel">Pesquisar
+							usuário</h5>
+						<button type="button" class="btn-close" data-bs-dismiss="modal"
+							aria-label="Close"></button>
+					</div>
+					<div class="modal-body">
+						<form>
+							<div class="mb-3">
+								<label for="nomeBusca" class="col-form-label">Informe o
+									nome:</label> <input type="text" class="form-control" id="nomeBusca">
+							</div>
+							<button type="button" class="btn btn-success"
+								onclick="pesquisarUsuario()">Buscar</button>
+						</form>
+
+						<div style="height: 350px; overflow: scroll; overflow-x: hidden">
+							<table class="table" id="tabelaUsuario">
+								<thead>
+									<tr>
+										<th scope="col">ID</th>
+										<th scope="col">Nome</th>
+										<th scope="col">Idade</th>
+										<th scope="col">Editar</th>
+										<th scope="col">Deletar</th>
+									</tr>
+								</thead>
+								<tbody>
+								</tbody>
+							</table>
+						</div>
+					</div>
+					<div class="modal-footer">
+						<button type="button" class="btn btn-secondary"
+							data-bs-dismiss="modal">Fechar</button>
+					</div>
+				</div>
+
+			</div>
+		</div>
+	</div>
+
+	<script type="text/javascript">
+		function excluirUsuario(id) {
+
+			if (confirm('Deseja realemente deletar?')) {
+
+				$.ajax({
+					method : "DELETE",
+					url : "deletarUsuario",
+					data : "id=" + id,
+					success : function(response) {
+
+						console.log("log " + id)
+
+						$('#' + id).remove();
+
+						pesquisarUsuario()
+
+					}
+				}).fail(function(xhr, status, errorThrown) {
+					alert("Erro ao deletar usuário: " + xhr.responseText)
+				});
+
+			}
+		}
+
+		function colocarEmEdicao(id) {
+
+			$.ajax({
+				method : "GET",
+				url : "BuscarUsuario",
+				data : "id=" + id,
+				success : function(response) {
+
+					$("#id").val(response.id);
+					$("#nome").val(response.nome);
+					$("#idade").val(response.idade);
+
+				}
+			}).fail(function(xhr, status, errorThrown) {
+				alert("Erro ao adicionar usuário: " + xhr.responseText)
+			});
+		}
+
+		function pesquisarUsuario() {
+
+			var nome = $('#nomeBusca').val();
+
+			if (nome != null && nome.trim() != '') {
+
+				$
+						.ajax(
+								{
+									method : "GET",
+									url : "buscarPorNome",
+									data : "nome=" + nome,
+									success : function(response) {
+
+										console.log(response[3])
+
+										$('#tabelaUsuario > tbody > tr')
+												.remove();
+
+										for (var i = 0; i < response.length; i++) {
+
+											$('#tabelaUsuario > tbody')
+													.append(
+															'<tr><td>'
+																	+ response[i].id
+																	+ '</td><td>'
+																	+ response[i].nome
+																	+ '</td><td>'
+																	+ response[i].idade
+																	+ '</td><td style="width: 10%"><button type="button" onclick="colocarEmEdicao('
+																	+ response[i].id
+																	+ ')" class="btn btn-warning" data-bs-dismiss="modal">Editar</button></td><td><button type="button" class="btn btn-danger" onclick="excluirUsuario('
+																	+ response[i].id
+																	+ ')">Excluir</button></td></tr>');
+
+										}
+
+									}
+								}).fail(
+								function(xhr, status, errorThrown) {
+									alert("Erro ao adicionar usuário: "
+											+ xhr.responseText)
+								});
+			}
+
+		}
+
+		function salvarUsuario() {
+
+			var id = $("#id").val();
+			var nome = $("#nome").val();
+			var idade = $("#idade").val();
+			
+			if(nome == null || nome != null && nome.trim() == ''){
+				$('#nome').focus();
+				alert('Informe o nome');
+				return;
+			}
+			
+			if(idade == null || idade != null && idade.trim() == ''){
+				$('#idade').focus();
+				alert('Informe a idade');
+				return;
+			}
+			
+			if(idade <= 0 ){
+				$('#idade').focus();
+				alert('Informe uma idade válida')
+				return;
+			}
+
+			$.ajax({
+				method : "POST",
+				url : "salvarUsuario",
+				data : JSON.stringify({
+					id : id,
+					nome : nome,
+					idade : idade
+				}),
+				contentType : "application/json; charset=utf-8",
+				success : function(response) {
+
+					$("#id").val(response.id);
+					alert("Usuário adicionado com sucesso")
+				}
+			}).fail(function(xhr, status, errorThrown) {
+				alert("Erro ao adicionar usuário: " + xhr.responseText)
+			});
+		}
+
+		function limparCampos() {
+
+			document.getElementById("formCadastroUser").reset();
+		}
+	</script>
+
+	<script src="https://code.jquery.com/jquery-3.6.0.min.js"
+		integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4="
+		crossorigin="anonymous"></script>
+	<script
+		src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"
+		integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4"
+		crossorigin="anonymous"></script>
+
+</body>
+</html>
